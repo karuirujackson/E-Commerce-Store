@@ -8,6 +8,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@apollo/client": "^3.11.3",
     "@graphql-tools/mock": "^9.0.4",
     "@graphql-tools/schema": "^10.0.4",
     "bcryptjs": "2.4.3",

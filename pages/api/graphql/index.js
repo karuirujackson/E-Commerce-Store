@@ -2,6 +2,12 @@ import { graphqlHTTP } from 'express-graphql';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { addMocksToSchema } from '@graphql-tools/mock';
 
+let cart = {
+    count: 0,
+    products: [],
+    complete: false,
+}
+
 //The schema for the GraphQL server is written under a variable typeDefs
 const typeDefs = /* GrapdQL */ `
     type Product {
@@ -15,10 +21,20 @@ const typeDefs = /* GrapdQL */ `
         id: Int!
         title: String!
     }
+    type Cart {
+        total: Float
+        count: Int
+        products: [Product]
+        complete: Boolean
+    }    
     type Query {
         product: Product
         products(limit: Int): [Product]
         categories: [Category]
+        cart: Cart
+    }
+    type Mutation{
+        addToCart(productId: Int!) : Cart
     }
 `;
 
@@ -35,9 +51,35 @@ const mocks = {
     }),
 };
 
+const resolvers = {
+    Query: {
+        cart: () => cart,
+    },
+    Mutation: {
+        addToCart: (_, { productId }) => {
+            cart = {
+                ...cart,
+                count: cart.count + 1,
+                products: [
+                    ...cart.products,
+                    {
+                        productId,
+                        title: 'My product',
+                        thumbnail: 'https://picsum.photos/400/400',
+                        price: (Math.random() * 99.0 + 1.0).toFixed(2),
+                        category: null,
+                    },
+                ],
+            };
+            return cart;
+        },
+    },
+};
+
 const executableSchema = addMocksToSchema ({ 
     schema: makeExecutableSchema({ typeDefs,  }),
     mocks,
+    resolvers,
 });
 
 function runMiddleware(req, res, fn) {
