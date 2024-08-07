@@ -1,5 +1,6 @@
 import { createGlobalStyle } from 'styled-components';
-import { ApolloClient, InMemoryCache, ApolloProvider } from '@apollo/client';
+import { ApolloClient, InMemoryCache, ApolloProvider, createHttpLink } from '@apollo/client';
+import { setContext } from '@apollo/client/link/context';
 import Header from '../components/Header';
 
 const GlobalStyle = createGlobalStyle` 
@@ -14,8 +15,22 @@ const GlobalStyle = createGlobalStyle`
   } 
 `;
 
-const client = new ApolloClient ({
+const httpLink = createHttpLink({
   uri: 'http://localhost:3000/api/graphql/',
+});
+
+const authLink = setContext((_, { headers }) => {
+  const token = sessionStorage.getItem('token');
+  return {
+    headers: {
+      ...headers,
+      authorization: token ? `Bearer ${token}` : '',
+    },
+  };
+});
+
+const client = new ApolloClient ({
+  link: authLink.concat(httpLink),
   cache: new InMemoryCache()
 });
 function MyApp({ Component, pageProps }) {
